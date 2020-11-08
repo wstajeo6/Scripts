@@ -1,64 +1,109 @@
-function Execute
-{
-    $exit_code = 0
-    $env_variables_path = "C:\Git\scripts\ENV_VARIABLES.txt"
-    if(![System.IO.File]::Exists($env_variables_path))
-    {
-        Write-Host "File does not exist: $env_variables_path"
-        $exit_code
-        return
-    }
-    
-    $stream_reader = New-Object System.IO.StreamReader{C:\Git\scripts\ENV_VARIABLES.txt}
-    try
-    {
-        $line_counter = 0
-        while ($null -ne ($current_line =$stream_reader.ReadLine()) -and ![string]::IsNullOrWhiteSpace($current_line))
-        {
-            $line_counter++
-            #Write-Host "$current_line"
-    
-            $pair = $current_line.Split("{;}")
-            
-            if  ($pair.Length -ne 2)
-            {
-                Write-Host "Error in line ${$line_counter}: Invalid length of params (should be 2)."
-                $exit_code = 3
-                return
-            }
-    
-            for ($i=0; $i -lt $pair.Length; $i++)
-            {
-                $pair[$i] = $pair[$i].Trim()
-                Write-Host ()
-            }
-    
-            [Environment]::SetEnvironmentVariable($pair[0], $pair[1], 'Process')
-        }
-    
-        if($line_counter -eq 0)
-        {
-            $exit_code = 2
-            return
-        }
-    }
-    finally
-    {
-        $stream_reader.Dispose()
-    }
+### START-MAIN ###
 
-    return $exit_code
+try
+{
+    $env_variables_path = [System.IO.Path]::Combine($PSScriptRoot, "ENV_VARIABLES.txt")
+    $exit_code = Execute($env_variables_path)
+}
+catch
+{
+    $exit_code = 1
 }
 
-####### MAIN #######
-
-$exit_code = Execute
 Write-Host "$exit_code"
-
-EXIT $exit_code
 
 # $path1 = [Environment]::GetEnvironmentVariable('PATH1', 'Process')
 # $path2 = [Environment]::GetEnvironmentVariable('PATH2', 'Process')
 
 # Write-Host "$path1"
 # Write-Host "$path2"
+
+EXIT $exit_code
+
+### END-MAIN ###
+
+function Execute
+{
+    [CmdletBinding()]
+    param (
+        [string] $file_path
+    )
+    process
+    {
+        if  (!(CheckIfFileExists($file_path))){
+            return 2
+        }
+        
+        $keyValuePairs = GetEnvPairsFromFile($file_path)
+
+        if ($null -eq $keyValuePairs){
+            return 3
+        }
+
+        if($keyValuePairs.length -eq 0){
+            return 4
+        }
+
+        foreach($key in $keyValuePairs.Keys){
+            [Environment]::SetEnvironmentVariable($key, $keyValuePairs[$key], 'Process')
+        }
+           
+        return 0
+    }
+}
+
+function CheckIfFileExists
+{
+    [CmdletBinding()]
+    param (
+        [string] $file_path
+    )
+    process
+    {
+        if([System.IO.File]::Exists($file_path)){
+            return $true
+        }
+        
+        Write-Host "File does not exist: $file_path"
+        return $false
+    }
+}
+
+function GetEnvPairsFromFile
+{
+    param(
+        [string] $file_path
+    )
+    process
+    {
+        $reader = New-Object System.IO.StreamReader($file_path)
+    
+        try
+        {
+            $hashtable = @{}
+            $line_counter = 0
+
+            while ($null -ne ($current_line = $reader.ReadLine()))
+            {
+                $line_counter++
+        
+                $paramsArray = $current_line.Split("{;}")
+                
+                if  ($paramsArray.Length -ne 2)
+                {
+                    Write-Host "Error in line ${$line_counter}: Invalid length of params (should be 2)."
+                    return $null
+                }
+        
+                $hashtable.Add($paramsArray[0].Trim(), $paramsArray[1].Trim())
+            }
+        }
+        finally
+        {
+            if ($null -ne $reader){
+                $reader.Dispose()
+            }         
+        }
+        return $hashtable
+    }
+}

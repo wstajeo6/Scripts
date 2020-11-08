@@ -1,4 +1,4 @@
-function Using-Object
+function UsingObject
 {
     [CmdletBinding()]
     param (
@@ -26,3 +26,5 @@ function Using-Object
         }
     }
 }
+
+Export-ModuleMember -Function UsingObject
