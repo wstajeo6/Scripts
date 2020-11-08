@@ -1,0 +1,2 @@
+PATH1; C:\Git\scripts\Path1
+PATH2; C:\Git\scripts\Path2
