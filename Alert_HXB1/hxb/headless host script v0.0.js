@@ -2,8 +2,9 @@ var room = HBInit({
 	roomName: "gats room",
 	maxPlayers: 20,
 	noPlayer: true, // Remove host player (recommended!)
-	token: "thr1.AAAAAF-sRr9cWMNQX8HcMA.Kb1a3Gv-jBs",
-	//password: "xxx"
+	token: "thr1.AAAAAF-2wTTNwhZgV6xBfQ.RzQnKj2ZzQo",
+	//org token: "thr1.AAAAAF-sRr9cWMNQX8HcMA.Kb1a3Gv-jBs",
+	password: "xxx"
 });
 room.setDefaultStadium("Classic");
 room.setScoreLimit(3);
